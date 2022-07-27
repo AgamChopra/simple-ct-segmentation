@@ -59,7 +59,7 @@ def train(root_path, epochs = 100, lr = 1E-4, batch = 32, device = 'cpu'):
             optimizer.zero_grad() 
             
             x, y = data.load_batch()
-            x, y = norm(x).to(device), torch.where(y > 0.5, 1., 0.).to(device) # normalize
+            x, y = norm(x).to(device), torch.where(norm(y) > 0.5, 1., 0.).to(device) # normalize
             
             yp = neural_network(x,device)     
             
@@ -76,7 +76,7 @@ def train(root_path, epochs = 100, lr = 1E-4, batch = 32, device = 'cpu'):
         for i in trange(iterations_val):
             with torch.no_grad():
                 x, y = data_val.load_batch()
-                x, y = norm(x).to(device), torch.where(y > 0.5, 1., 0.).to(device) # normalize
+                x, y = norm(x).to(device), torch.where(norm(y) > 0.5, 1., 0.).to(device) # normalize
                 
                 yp = neural_network(x,device)     
                 
@@ -171,5 +171,6 @@ def tst(path,file_name,device = 'cpu'):
     
     
 if __name__ == '__main__':
-    #trn('E:/ML/Ilka_segmentation/ct_segment/',20,1.37E-5,32,'cuda')
-    tst('E:/ML/Ilka_segmentation/ct_segment/', 'trained_paramaters_10_epochs.pt','cuda')
+    eps = 10
+    #trn('E:/ML/Ilka_segmentation/ct_segment/',eps,5E-5,32,'cuda')
+    tst('E:/ML/Ilka_segmentation/ct_segment/', 'trained_paramaters_%d_epochs.pt'%(eps),'cuda')
