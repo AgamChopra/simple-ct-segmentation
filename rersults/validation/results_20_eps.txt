@@ -1,4 +1,0 @@
-Path changed from PATH/TO/YOUR/FOLDER/ to E:/ML/Ilka_segmentation/ct_segment/
-100%|██████████| 1708/1708 [00:07<00:00, 214.12it/s]
-100%|██████████| 27/27 [00:09<00:00,  2.88it/s]
-Average Mean Square Error =  0.001800763498370846
