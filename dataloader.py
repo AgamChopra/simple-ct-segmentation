@@ -41,15 +41,15 @@ def augment_batch(x, y, p=0.5):
     for i in range(x.shape[0]):
         if random.random() > p:
             x_, y_ = rand_augment(x[i],y[i])
-            new_x.append(x_)
-            new_y.append(y_)
+            new_x.append(x_.view(1,xshape[1],xshape[2],xshape[3]))
+            new_y.append(y_.view(1,yshape[1],yshape[2],yshape[3]))
             
         else:
-            new_x.append(x[i])
-            new_y.append(y[i])
+            new_x.append(x[i].view(1,xshape[1],xshape[2],xshape[3]))
+            new_y.append(y[i].view(1,yshape[1],yshape[2],yshape[3]))
             
-    x = torch.cat(new_x,dim=0,out=xtemp).view(xshape)
-    y = torch.cat(new_y,dim=0,out=ytemp).view(yshape)
+    x = torch.cat(new_x,dim=0,out=xtemp)
+    y = torch.cat(new_y,dim=0,out=ytemp)
 
     return x, y
 
@@ -179,7 +179,7 @@ def test():
     print(dt.data_info())
     for i in range(1000):
         x,y = dt.load_batch()
-        if i % 100 == 0:
+        if i % 10 == 0:
             print(x.shape,y.shape)
             print(dt.id)
             plt.imshow(x[0].detach().cpu().numpy().T)
