@@ -17,13 +17,15 @@ def norm(x):
         return (x - min(x)) / (max(x) - min(x))
 
 
-def train(root_path, epochs = 100, lr = 1E-4, batch = 32, device = 'cpu'):
+def train(root_path, epochs = 100, lr = 1E-4, batch = 32, device = 'cpu', params = None):
     
     # correct the path
     dataloader.update_path(root_path)
     
     # load the model
     neural_network = model.UNet().to(device)
+    if params is not None:
+        neural_network.load_state_dict(torch.load(root_path + params,map_location=device))
     
     # load the optimizer and criterion
     optimizer = torch.optim.Adam(neural_network.parameters(),lr)
@@ -98,14 +100,16 @@ def train(root_path, epochs = 100, lr = 1E-4, batch = 32, device = 'cpu'):
                   
         print(' Average Train Loss: %.4f, Validation Loss: %.4f'%(losses_train[-1],losses_val[-1]))
 
-    
-    torch.save(neural_network.cpu().state_dict(), root_path + 'trained_paramaters_%d_epochs.pt'%(epochs))
+    if params is None:
+        torch.save(neural_network.cpu().state_dict(), root_path + 'trained_paramaters_%d_epochs.pt'%(epochs))
+    else:
+        torch.save(neural_network.cpu().state_dict(), root_path + 'fine_trained_paramaters_%d_epochs.pt'%(epochs))
             
     return neural_network, data, data_val, losses_train, losses_val
 
 
-def trn(root_path, epochs = 100, lr = 1E-4, batch = 32, device = 'cpu'):  
-    _, _, _,losst, lossv = train(root_path, epochs, lr, batch , device)        
+def trn(root_path, epochs = 100, lr = 1E-4, batch = 32, device = 'cpu', params = None):  
+    _, _, _,losst, lossv = train(root_path, epochs, lr, batch , device, params)        
     plt.plot(losst,label = 'Training Loss')
     plt.plot(lossv,label = 'Validation Loss')
     plt.title('MSE Loss')
@@ -171,6 +175,6 @@ def tst(path,file_name,device = 'cpu'):
     
     
 if __name__ == '__main__':
-    eps = 10
-    #trn('E:/ML/Ilka_segmentation/ct_segment/',eps,5E-5,32,'cuda')
-    tst('E:/ML/Ilka_segmentation/ct_segment/', 'trained_paramaters_%d_epochs.pt'%(eps),'cuda')
+    eps = 50
+    trn(root_path='E:/ML/Ilka_segmentation/ct_segment/',epochs=eps,lr=1E-5, batch=32, device='cuda', params='trained_paramaters_30_epochs.pt')
+    #tst('E:/ML/Ilka_segmentation/ct_segment/', 'trained_paramaters_%d_epochs.pt'%(eps),'cuda')

@@ -12,7 +12,7 @@ ROOT_PATH = 'PATH/TO/YOUR/FOLDER/'
 
 
 def rand_augment(xi, yi):
-    if random.random() > 0.5:
+    if random.random() > 0.25:
         rotation = random.randint(0, 360)
         xi = tvf.rotate(xi, angle = rotation)
         yi = tvf.rotate(yi, angle = rotation)
@@ -121,7 +121,7 @@ class dataloader(): #load all the data, convert to torch, randomize
             self.id += self.batch
                     
         if self.augment:
-            batch_raw, batch_mask = augment_batch(batch_raw, batch_mask)
+            batch_raw, batch_mask = augment_batch(batch_raw, batch_mask, 0.75)
         
         return batch_raw, batch_mask
     
