@@ -1,5 +1,5 @@
 <h1>simple-ct-segmentation</h1>
-<p>Pytorch code for segmentation for 2d CT chest slices.</p>
+<p>Pytorch code for segmentation of 2d CT chest slices.</p>
 
 <p align="center">
     <img width="300" height="300" src="">
