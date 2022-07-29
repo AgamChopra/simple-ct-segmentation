@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from torchvision.transforms import functional as tvf
 import pandas as pd
 import random
 from PIL import Image
@@ -8,6 +9,49 @@ from matplotlib import pyplot as plt
 
 
 ROOT_PATH = 'PATH/TO/YOUR/FOLDER/'
+
+
+def rand_augment(xi, yi):
+    if random.random() > 0.5:
+        rotation = random.randint(0, 360)
+        xi = tvf.rotate(xi, angle = rotation)
+        yi = tvf.rotate(yi, angle = rotation)
+        
+    if random.random() > 0.5:
+        xi = tvf.hflip(xi)
+        yi = tvf.hflip(yi)
+        
+    if random.random() > 0.5:
+        xi = tvf.vflip(xi)
+        yi = tvf.vflip(yi)
+    
+    return xi, yi
+
+
+def augment_batch(x, y, p=0.5):
+    new_x = []
+    new_y = []
+    
+    xshape = x.shape
+    yshape = y.shape
+    
+    xtemp = torch.zeros(xshape, dtype=torch.int16)
+    ytemp = torch.zeros(yshape, dtype=torch.int16)
+    
+    for i in range(x.shape[0]):
+        if random.random() > p:
+            x_, y_ = rand_augment(x[i],y[i])
+            new_x.append(x_)
+            new_y.append(y_)
+            
+        else:
+            new_x.append(x[i])
+            new_y.append(y[i])
+            
+    x = torch.cat(new_x,dim=0,out=xtemp).view(xshape)
+    y = torch.cat(new_y,dim=0,out=ytemp).view(yshape)
+
+    return x, y
 
 
 def update_path(root_path = ''):
@@ -37,8 +81,9 @@ def load_dataset(lookup):
 
     
 class dataloader(): #load all the data, convert to torch, randomize
-    def __init__(self, batch = 32, post = False):
+    def __init__(self, batch = 32, post = False, augment = True):
         csv = pd.read_csv(ROOT_PATH + 'train.csv')
+        self.augment = augment
         self.lookup = csv.to_numpy()[:15000]
         self.id = 0
         self.batch = batch
@@ -48,7 +93,8 @@ class dataloader(): #load all the data, convert to torch, randomize
         self.raw, self.mask = load_dataset(self.lookup)
         self.info = {"samples" : len(self.lookup),
                      "batch_size" : self.batch,
-                     "data_shape" : '[batch,channel,%d,%d]'%(self.raw.shape[-2],self.raw.shape[-1])}
+                     "data_shape" : '[batch,channel,%d,%d]'%(self.raw.shape[-2],self.raw.shape[-1]),
+                     "augment" : self.augment}
         
     def randomize(self):
         sample_len = len(self.lookup)
@@ -73,7 +119,10 @@ class dataloader(): #load all the data, convert to torch, randomize
         else:
             batch_raw, batch_mask = self.raw[self.idx[self.id:self.id + self.batch]], self.mask[self.idx[self.id:self.id + self.batch]]
             self.id += self.batch
-            
+                    
+        if self.augment:
+            batch_raw, batch_mask = augment_batch(batch_raw, batch_mask)
+        
         return batch_raw, batch_mask
     
     def data_info(self):
