@@ -4,7 +4,6 @@ from torchvision.transforms import functional as tvf
 import pandas as pd
 import random
 from PIL import Image
-from tqdm import trange
 from matplotlib import pyplot as plt
 
 
@@ -68,11 +67,11 @@ def load_datapoint(path):
     return data.T
 
 
-def load_dataset(lookup):
+def load_batch_dataset(lookup,batch_idx):
     raw, mask = [],[]
     
-    for i in trange(len(lookup)):
-        path = lookup[i]
+    for i in range(len(batch_idx)):
+        path = lookup[batch_idx[i]]
         raw.append(load_datapoint(ROOT_PATH + 'images/images/' + path[0]))
         mask.append(load_datapoint(ROOT_PATH + 'masks/masks/' + path[1]))
     
@@ -90,10 +89,8 @@ class dataloader(): #load all the data, convert to torch, randomize
         self.idx = None
         self.Flag = True
         self.post = post
-        self.raw, self.mask = load_dataset(self.lookup)
         self.info = {"samples" : len(self.lookup),
                      "batch_size" : self.batch,
-                     "data_shape" : '[batch,channel,%d,%d]'%(self.raw.shape[-2],self.raw.shape[-1]),
                      "augment" : self.augment}
         
     def randomize(self):
@@ -109,15 +106,15 @@ class dataloader(): #load all the data, convert to torch, randomize
         
         if self.id + self.batch > max_id:         
             if self.id < max_id:
-                batch_raw, batch_mask = self.raw[self.idx[self.id:]], self.mask[self.idx[self.id:]]
+                batch_raw, batch_mask = load_batch_dataset(self.lookup, self.idx[self.id:])
             elif self.id == max_id:
-                batch_raw, batch_mask = self.raw[self.idx[self.id:self.id]], self.mask[self.idx[self.id:self.id]]
+                batch_raw, batch_mask = load_batch_dataset(self.lookup, self.idx[self.id:self.id])
             self.id = 0
             self.randomize()
             if self.post:
                 print('Dataset re-randomized...')
         else:
-            batch_raw, batch_mask = self.raw[self.idx[self.id:self.id + self.batch]], self.mask[self.idx[self.id:self.id + self.batch]]
+            batch_raw, batch_mask = load_batch_dataset(self.lookup, self.idx[self.id:self.id + self.batch])
             self.id += self.batch
                     
         if self.augment:
@@ -138,10 +135,8 @@ class dataloader_val(): #load all the data, convert to torch, randomize
         self.idx = None
         self.Flag = True
         self.post = post
-        self.raw, self.mask = load_dataset(self.lookup)
         self.info = {"samples" : len(self.lookup),
-                     "batch_size" : self.batch,
-                     "data_shape" : '[batch,channel,%d,%d]'%(self.raw.shape[-2],self.raw.shape[-1])}
+                     "batch_size" : self.batch}
         
     def randomize(self):
         sample_len = len(self.lookup)
@@ -156,15 +151,15 @@ class dataloader_val(): #load all the data, convert to torch, randomize
         
         if self.id + self.batch > max_id:         
             if self.id < max_id:
-                batch_raw, batch_mask = self.raw[self.idx[self.id:]], self.mask[self.idx[self.id:]]
+                batch_raw, batch_mask = load_batch_dataset(self.lookup, self.idx[self.id:])
             elif self.id == max_id:
-                batch_raw, batch_mask = self.raw[self.idx[self.id:self.id]], self.mask[self.idx[self.id:self.id]]
+                batch_raw, batch_mask = load_batch_dataset(self.lookup, self.idx[self.id:self.id])
             self.id = 0
             self.randomize()
             if self.post:
                 print('Dataset re-randomized...')
         else:
-            batch_raw, batch_mask = self.raw[self.idx[self.id:self.id + self.batch]], self.mask[self.idx[self.id:self.id + self.batch]]
+            batch_raw, batch_mask = load_batch_dataset(self.lookup, self.idx[self.id:self.id + self.batch])
             self.id += self.batch
             
         return batch_raw, batch_mask
