@@ -67,13 +67,12 @@ def load_datapoint(path):
     return data.T
 
 
-def load_batch_dataset(lookup,batch_idx):
+def load_batch_dataset(paths):
     raw, mask = [],[]
     
-    for i in range(len(batch_idx)):
-        path = lookup[batch_idx[i]]
-        raw.append(load_datapoint(ROOT_PATH + 'images/images/' + path[0]))
-        mask.append(load_datapoint(ROOT_PATH + 'masks/masks/' + path[1]))
+    for i in range(len(paths)):
+        raw.append(load_datapoint(ROOT_PATH + 'images/images/' + paths[i,0]))
+        mask.append(load_datapoint(ROOT_PATH + 'masks/masks/' + paths[i,1]))
     
     raw, mask = torch.from_numpy(np.asanyarray(raw)), torch.from_numpy(np.asanyarray(mask))
     return raw, mask
@@ -106,15 +105,15 @@ class dataloader(): #load all the data, convert to torch, randomize
         
         if self.id + self.batch > max_id:         
             if self.id < max_id:
-                batch_raw, batch_mask = load_batch_dataset(self.lookup, self.idx[self.id:])
+                batch_raw, batch_mask = load_batch_dataset(self.lookup[self.idx[self.id:]])
             elif self.id == max_id:
-                batch_raw, batch_mask = load_batch_dataset(self.lookup, self.idx[self.id:self.id])
+                batch_raw, batch_mask = load_batch_dataset(self.lookup[self.idx[self.id:self.id]])
             self.id = 0
             self.randomize()
             if self.post:
                 print('Dataset re-randomized...')
         else:
-            batch_raw, batch_mask = load_batch_dataset(self.lookup, self.idx[self.id:self.id + self.batch])
+            batch_raw, batch_mask = load_batch_dataset(self.lookup[self.idx[self.id:self.id + self.batch]])
             self.id += self.batch
                     
         if self.augment:
@@ -151,15 +150,15 @@ class dataloader_val(): #load all the data, convert to torch, randomize
         
         if self.id + self.batch > max_id:         
             if self.id < max_id:
-                batch_raw, batch_mask = load_batch_dataset(self.lookup, self.idx[self.id:])
+                batch_raw, batch_mask = load_batch_dataset(self.lookup[self.idx[self.id:]])
             elif self.id == max_id:
-                batch_raw, batch_mask = load_batch_dataset(self.lookup, self.idx[self.id:self.id])
+                batch_raw, batch_mask = load_batch_dataset(self.lookup[self.idx[self.id:self.id]])
             self.id = 0
             self.randomize()
             if self.post:
                 print('Dataset re-randomized...')
         else:
-            batch_raw, batch_mask = load_batch_dataset(self.lookup, self.idx[self.id:self.id + self.batch])
+            batch_raw, batch_mask = load_batch_dataset(self.lookup[self.idx[self.id:self.id + self.batch]])
             self.id += self.batch
             
         return batch_raw, batch_mask
